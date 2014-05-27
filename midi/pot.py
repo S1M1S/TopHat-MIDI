@@ -1,10 +1,18 @@
 __author__ = 'Celery'
+import rtmidi.midiconstants as m
 
 class Pot():
-    def __init__(self, name, midi, func):
+    def __init__(self, name, midi_loc, func):
         self.name = name
-        self.midi = midi
+        self.midi_loc = midi_loc
         self.function = func
+        self.vel = 0
+
+    def fire(self):
+        return [m.CONTROLLER_CHANGE, self.midi_loc, self.vel]
+
+    def set_vel(self, new_vel):
+        self.vel = new_vel
 
     def change_name(self, new_name):
         self.name = new_name
