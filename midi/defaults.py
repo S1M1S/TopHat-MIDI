@@ -1,5 +1,8 @@
 __author__ = 'Celery'
 
+NUM_OF_POTS = 8
+NUM_OF_KEYS = 16
+
 rgb_cols = {
     'white':    [0,0,0],
     'red':      [255,0,0],

@@ -2,16 +2,15 @@ __author__ = 'Celery'
 import os
 import sys
 import rtmidi
+from midi.pot import Pot
+from midi.key import Key
 import pickle #TODO: import cPickle as pickle
 from rtmidi.midiutil import open_midiport
-from pot import Pot
-from key import Key
+from midi.defaults import NUM_OF_POTS, NUM_OF_KEYS
 
-NUM_OF_POTS = 8
-NUM_OF_KEYS = 16
-
-class Main():
+class Engine():
     def __init__(self):
+
         self.dir = None
         self.file = ''
         self.raw_data = ''
@@ -34,20 +33,15 @@ class Main():
         f.close()
 
     def new_file(self, filename, project_dir):
+        self.dir = project_dir()
         self.file = filename + '.txt'
-        self.dir = project_dir
-
-        try:
-            os.stat(self.dir)
-        except: #the TopHat-MIDI folder does not exist yet
-            print('Making a new TopHat-MIDI folder at %s' % self.dir)
-            os.mkdir(self.dir)
 
         #fill the file out with default things
         for i in range(NUM_OF_POTS):
             self.pots[i] = Pot(str(i), i, 'forward')
         for i in range(NUM_OF_KEYS):
             self.keys[i] = Key(str(i), NUM_OF_POTS + i, 'toggle')
+        self.save()
 
     def save(self):
         f = open(os.path.join(self.dir, self.file), 'wb')
@@ -59,17 +53,8 @@ class Main():
 
         f.close()
 
-    def save_as(self, filename, project_dir=None):
-        if project_dir is not None:
-            self.dir = project_dir()
-        else:
-            self.dir = os.path.join(os.environ['USERPROFILE'], 'Documents', 'TopHat-MIDI') #default to my documents
-
-        self.new_file(filename, self.dir)
-        self.save()
-
-
 if __name__ == '__main__':
-    main = Main()
+    main = Engine()
     main.save_as('default')
-    pass
+    main.open('C:\\Users\\Celery\\Documents\\TopHat-MIDI\\default.txt')
+    print main.pots

@@ -1,86 +1,117 @@
 __author__ = 'Celery'
-#!/usr/bin/env python
-
-# example helloworld2.py
 
 import pygtk
 pygtk.require('2.0')
 import gtk
+from midi.main import Engine
 
-class HelloWorld2:
 
-    # Our new improved callback.  The data passed to this method
-    # is printed to stdout.
-    def callback(self, widget, data):
-        print "Hello again - %s was pressed" % data
+class Gui:
+    def new_menu_item(self, name, img, accel, func):
+        if name == 'sep':
+            return gtk.SeparatorMenuItem()
+        menu_item = gtk.ImageMenuItem(img, name)
+        menu_item.connect('activate', func, name)
+        key, mod = gtk.accelerator_parse(accel)
+        menu_item.add_accelerator('activate', self.shortcuts, key, mod, gtk.ACCEL_VISIBLE)
+        menu_item.show()
+        return menu_item
 
-    # another callback
+    def create_menu(self):
+        items = [['New',    gtk.STOCK_NEW,      '<Control>N',       self.new_file],
+                 ['Open',   gtk.STOCK_OPEN,     '<Control>O',       self.open_file],
+                 ['Save As',gtk.STOCK_SAVE_AS,  '<Control><Shift>S',self.new_file],
+                 ['Save',   gtk.STOCK_SAVE,     '<Control>S',       self.save_file],
+                 ['sep',    None,               None,               None],
+                 ['Quit',   gtk.STOCK_QUIT,     '<Control>Q',       self.delete_event]]
+
+        self.menu = gtk.Menu()
+        self.shortcuts = gtk.AccelGroup()
+        self.window.add_accel_group(self.shortcuts)
+
+        for name, img, accel, func in items:
+            menu_item = self.new_menu_item(name, img, accel, func)
+            self.menu.append(menu_item)
+
+        self.file_menu = gtk.MenuItem('File')
+        self.file_menu.set_submenu(self.menu)
+        self.file_menu.show()
+
+        self.menu_separator = gtk.VBox()
+        self.window.add(self.menu_separator)
+        self.menu_separator.show()
+
+        self.menu_bar = gtk.MenuBar()
+        self.menu_separator.pack_start(self.menu_bar, False, False, 2)
+        self.menu_bar.append(self.file_menu)
+        self.menu_bar.show()
+
+    def __init__(self):
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.set_title('TopHat MIDI')
+        self.window.set_size_request(250, 200)
+
+        self.window.connect("delete_event", self.delete_event)
+
+        self.create_menu()
+
+        self.window.show()
+
+    def new_file(self, widget, event, data=None):
+        if event == 'New':
+            title = 'Create a new file'
+        elif event == 'Save As':
+            title = 'Save as'
+        new_file_window = gtk.FileChooserDialog(title=title,
+                                                parent=self.window,
+                                                action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                                buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+        filename_label = gtk.Label('Enter a filename:')
+        filename_input = gtk.Entry()
+        filename_bar = gtk.HBox(spacing=10)
+        filename_bar.pack_start(filename_label, expand=False)
+        filename_bar.pack_start(filename_input)
+        filename_label.show()
+        filename_input.show()
+        new_file_window.set_extra_widget(filename_bar)
+        event = new_file_window.run()
+
+        if event == gtk.RESPONSE_OK:
+            print filename_input.get_text(), new_file_window.get_filename()
+            engine.new_file(filename_input.get_text(), new_file_window.get_filename())
+
+        new_file_window.destroy()
+
+    def open_file(self, widget, event, data=None):
+        open_file_window = gtk.FileChooserDialog(title='Select a file to open',
+                                                 parent=self.window,
+                                                 buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        event = open_file_window.run()
+        if event == gtk.RESPONSE_OK:
+            engine.open(open_file_window.get_filename())
+
+        open_file_window.destroy()
+
+    def save_file(self, widget, event, data=None):
+        engine.save()
+
+    def save_as(self, widget, event, data=None):
+        pass
+
     def delete_event(self, widget, event, data=None):
         gtk.main_quit()
         return False
 
-    def __init__(self):
-        # Create a new window
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    def button_press(self, widget, event):
+        if event.type == gtk.gdk.BUTTON_PRESS:
+            widget.popup(None, None, None, event.button, event.time)
+            return True
+        return False
 
-        # This is a new call, which just sets the title of our
-        # new window to "Hello Buttons!"
-        self.window.set_title("Hello Buttons!")
-
-        # Here we just set a handler for delete_event that immediately
-        # exits GTK.
-        self.window.connect("delete_event", self.delete_event)
-
-        # Sets the border width of the window.
-        self.window.set_border_width(10)
-
-        # We create a box to pack widgets into.  This is described in detail
-        # in the "packing" section. The box is not really visible, it
-        # is just used as a tool to arrange widgets.
-        self.box1 = gtk.HBox(False, 0)
-
-        # Put the box into the main window.
-        self.window.add(self.box1)
-
-        # Creates a new button with the label "Button 1".
-        self.button1 = gtk.Button("Button 1")
-
-        # Now when the button is clicked, we call the "callback" method
-        # with a pointer to "button 1" as its argument
-        self.button1.connect("clicked", self.callback, "button 1")
-
-        # Instead of add(), we pack this button into the invisible
-        # box, which has been packed into the window.
-        self.box1.pack_start(self.button1, True, True, 2)
-
-        # Always remember this step, this tells GTK that our preparation for
-        # this button is complete, and it can now be displayed.
-        self.button1.show()
-
-        # Do these same steps again to create a second button
-        self.button2 = gtk.Button("Button 2")
-
-        # Call the same callback method with a different argument,
-        # passing a pointer to "button 2" instead.
-        self.button2.connect("clicked", self.callback, "button 2")
-
-        self.box1.pack_start(self.button2, True, True, 2)
-
-        # The order in which we show the buttons is not really important, but I
-        # recommend showing the window last, so it all pops up at once.
-        self.button2.show()
-
-        self.quit_button = gtk.Button('Quit')
-        self.quit_button.connect('clicked', self.delete_event, None)
-        self.box1.pack_start(self.quit_button, True, True, 2)
-        self.quit_button.show()
-
-        self.box1.show()
-        self.window.show()
-
-def main():
-    gtk.main()
+    def menuitem_response(self, widget, string):
+        print "%s" % string
 
 if __name__ == "__main__":
-    hello = HelloWorld2()
-    main()
+    engine = Engine()
+    gui = Gui()
+    gtk.main()
