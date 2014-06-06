@@ -20,6 +20,9 @@ class KeyEle():
         self.x_loc = x_loc
         self.y_loc = y_loc
 
+    def set_parent(self, new_parent):
+        self.parent = new_parent
+
 
 class EntryDialog(gtk.MessageDialog):  # a class I found on stackoverflow - from user FriendFX
     def __init__(self, *args, **kwargs):
@@ -107,28 +110,36 @@ class Gui:
             menu_item = self.new_menu_item(name, func=func)
             self.key_menu.append(menu_item)
 
+    def create_key_visual_components(self):
+        self.key_eles = [[None]*default.NUM_OF_KEYS_H for i in range(default.NUM_OF_KEYS_V)]
+        for i, row in enumerate(self.key_eles):
+            for j, cell in enumerate(row):
+                self.key_eles[i][j] = KeyEle(
+                    engine.keys[i][j],
+                    gtk.Alignment(),
+                    gtk.Frame(),
+                    gtk.VBox(),
+                    gtk.DrawingArea(),
+                    gtk.Entry(),
+                    i,
+                    j
+                )
+
     def create_key_widgets(self):
         self.key_grid = gtk.Table(default.NUM_OF_KEYS_H , default.NUM_OF_KEYS_V)
-        for row in self.key_eles:
-            for key_ele in row:
+        for i, row in enumerate(self.key_eles):
+            for j, key_ele in enumerate(row):
                 key_ele.align.set(0.5, 0.5, 0, 0)
                 key_ele.box.set_size_request(default.KEY_AREA_H, default.KEY_AREA_V+21)
                 key_ele.drawing_area.set_size_request(default.KEY_AREA_H, default.KEY_AREA_V)
                 key_ele.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
                                                 | gtk.gdk.BUTTON_PRESS_MASK
                                                 | gtk.gdk.BUTTON_RELEASE_MASK)  # drawing areas do not receive mouse clicks by default
-                key_ele.drawing_area.connect('expose_event', self.draw_key_widgets, key_ele)
-                key_ele.drawing_area.connect('button_release_event', self.key_control, key_ele)
-                key_ele.drawing_area.connect('button_press_event', self.key_control, key_ele)
-
                 key_ele.entry.set_text(key_ele.parent.name)
                 key_ele.entry.set_editable(False)
                 key_ele.entry.set_has_frame(False)
                 key_ele.entry.set_max_length(default.MAX_NAME_LENGTH)
                 key_ele.entry.set_alignment(0.5)
-                key_ele.entry.connect('button_press_event', self.entry_control, key_ele)
-                # key_ele.entry.connect('key_press_event', self.entry_control, key_ele)
-                key_ele.entry.connect('focus_out_event', self.entry_control, key_ele)
 
                 key_ele.box.pack_start(key_ele.drawing_area)
                 key_ele.box.pack_end(key_ele.entry)
@@ -138,8 +149,14 @@ class Gui:
                 key_ele.box.show()
                 key_ele.frame.show()
                 key_ele.align.show()
-
                 self.key_grid.attach(key_ele.align, key_ele.x_loc, key_ele.x_loc+1, key_ele.y_loc, key_ele.y_loc+1)
+
+                key_ele.drawing_area.connect('expose_event', self.draw_key_widgets, key_ele)
+                key_ele.drawing_area.connect('button_release_event', self.key_control, key_ele)
+                key_ele.drawing_area.connect('button_press_event', self.key_control, key_ele)
+                key_ele.entry.connect('button_press_event', self.entry_control, key_ele)
+                # key_ele.entry.connect('key_press_event', self.entry_control, key_ele)
+                key_ele.entry.connect('focus_out_event', self.entry_control, key_ele)
 
     def draw_key_widgets(self, key_drawing_area, event, key_ele):
         key_drawable = key_drawing_area.window
@@ -156,31 +173,24 @@ class Gui:
             key_drawable.draw_rectangle(context, True, 10+3, 10+3, 80-6, 80-6)
         return True
 
+    def refresh_key_widgets(self):
+        for i, row in enumerate(self.key_eles):
+            for j, key_ele in enumerate(row):
+                key_ele.set_parent(engine.keys[i][j])
+
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title('TopHat MIDI')
-        self.window.set_size_request(250, 200)
+        self.window.set_size_request(800, 600)
         self.window.connect('delete_event', self.delete_event)
         self.create_menu()
-        self.key_eles = [[None]*default.NUM_OF_KEYS_H for i in range(default.NUM_OF_KEYS_V)]
-        for i in range(default.NUM_OF_KEYS_H):
-            for j in range(default.NUM_OF_KEYS_V):
-                self.key_eles[i][j] = KeyEle(
-                    engine.keys[i][j],
-                    gtk.Alignment(),
-                    gtk.Frame(),
-                    gtk.VBox(),
-                    gtk.DrawingArea(),
-                    gtk.Entry(),
-                    i,
-                    j
-                )
+        self.create_key_visual_components()
         self.create_key_widgets()
-        self.menu_separator.pack_start(self.key_grid)
         for row in self.key_eles:
             for key_ele in row:
                 key_ele.drawing_area.show()
         self.key_grid.show()
+        self.menu_separator.pack_start(self.key_grid)
         self.window.show()
 
     def new_file(self, widget, event, data=None):
@@ -203,10 +213,10 @@ class Gui:
         event = new_file_window.run()
 
         if event == gtk.RESPONSE_OK:
-            print filename_input.get_text(), new_file_window.get_filename()
             engine.new_file(filename_input.get_text(), new_file_window.get_filename())
-
+            self.refresh_key_widgets()
         new_file_window.destroy()
+        self.window.queue_draw()
 
     def open_file(self, widget, event, data=None):
         open_file_window = gtk.FileChooserDialog(title='Select a file to open',
@@ -215,6 +225,7 @@ class Gui:
         event = open_file_window.run()
         if event == gtk.RESPONSE_OK:
             engine.open(open_file_window.get_filename())
+            self.refresh_key_widgets()
         open_file_window.destroy()
 
     def save_file(self, widget, event, data=None):
@@ -279,7 +290,6 @@ class Gui:
                             default_value=prev_val)
         entry.format_secondary_text('Please enter a new value')
         new_val = entry.run()
-        print new_val
         if new_val is not None:
             func(new_val)  # call the function specified above with the new value to be set
         entry.destroy()
