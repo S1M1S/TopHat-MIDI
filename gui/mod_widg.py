@@ -1,7 +1,7 @@
 __author__ = 'Celery'
 
 
-class KeyWidg:
+class ModWidg:
     def __init__(self, parent, align, frame, box, drawing_area, entry, x_loc, y_loc):
         self.parent = parent
         self.frame = frame

@@ -4,8 +4,9 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 from midi.main import Engine
-from gui.key_widg import KeyWidg
-from gui.pot_widg import PotWidge
+from key_widg import KeyWidg
+from pot_widg import PotWidg
+from mod_widg import ModWidg
 import midi.defaults as d
 
 
@@ -59,23 +60,33 @@ class Gui:
         return menu_item
 
     def create_menu(self):
-        items = [['New',    gtk.STOCK_NEW,      '<Control>N',       self.new_file],
-                 ['Open',   gtk.STOCK_OPEN,     '<Control>O',       self.open_file],
-                 ['Save As',gtk.STOCK_SAVE_AS,  '<Control><Shift>S',self.new_file],
-                 ['Save',   gtk.STOCK_SAVE,     '<Control>S',       self.save_file],
-                 ['sep',    None,               None,               None],
-                 ['Quit',   gtk.STOCK_QUIT,     '<Control>Q',       self.delete_event]]
-        self.menu = gtk.Menu()
         self.shortcuts = gtk.AccelGroup()
         self.window.add_accel_group(self.shortcuts)
 
-        for name, img, accel, func in items:
+        file_root = gtk.MenuItem('File')
+        file_items = [['New',    gtk.STOCK_NEW,      '<Control>N',       self.new_file],
+                      ['Open',   gtk.STOCK_OPEN,     '<Control>O',       self.open_file],
+                      ['Save As',gtk.STOCK_SAVE_AS,  '<Control><Shift>S',self.new_file],
+                      ['Save',   gtk.STOCK_SAVE,     '<Control>S',       self.save_file],
+                      ['sep',    None,               None,               None],
+                      ['Quit',   gtk.STOCK_QUIT,     '<Control>Q',       self.delete_event]]
+        file_menu = gtk.Menu()
+        file_root.set_submenu(file_menu)
+        for name, img, accel, func in file_items:
             menu_item = self.new_menu_item(name, img, accel, func)
-            self.menu.append(menu_item)
+            file_menu.append(menu_item)
+        file_root.show()
+        file_menu.show()
 
-        self.file_menu = gtk.MenuItem('File')
-        self.file_menu.set_submenu(self.menu)
-        self.file_menu.show()
+        newobj_root = gtk.MenuItem('Objects')
+        newobj_items = [['Create new modulator', self.new_modulator]]
+        newobj_menu = gtk.Menu()
+        newobj_root.set_submenu(newobj_menu)
+        for name, func in newobj_items:
+            menu_item = self.new_menu_item(name, func=func)
+            newobj_menu.append(menu_item)
+        newobj_root.show()
+        newobj_menu.show()
 
         self.menu_separator = gtk.VBox()
         self.window.add(self.menu_separator)
@@ -83,13 +94,14 @@ class Gui:
 
         self.menu_bar = gtk.MenuBar()
         self.menu_separator.pack_start(self.menu_bar, False, False, 2)
-        self.menu_bar.append(self.file_menu)
+        self.menu_bar.append(file_root)
+        self.menu_bar.append(newobj_root)
         self.menu_bar.show()
 
         key_items = [['Edit CC number...', self.edit_key_attrs],
                      ['Edit key function...', self.edit_key_attrs],
-                     ['Edit key colour...', self.edit_key_attrs]]
-
+                     ['Edit key colour...', self.edit_key_attrs],
+                     ['Link to modulator...', self.edit_key_attrs]]
         self.key_menu = gtk.Menu()
         for name, func in key_items:
             menu_item = self.new_menu_item(name, func=func)
@@ -178,6 +190,10 @@ class Gui:
         self.menu_separator.pack_start(self.key_grid)
         self.window.show()
 
+    def delete_event(self, widget, event, data=None):
+        gtk.main_quit()
+        return False
+
     def new_file(self, widget, event, data=None):
         if event == 'New':
             title = 'Create a new file'
@@ -216,9 +232,8 @@ class Gui:
     def save_file(self, widget, event, data=None):
         engine.save()
 
-    def delete_event(self, widget, event, data=None):
-        gtk.main_quit()
-        return False
+    def new_modulator(self, **kwargs):  # TODO: actually make this function. Should create a new mod_widg on the screen.
+        pass
 
     def key_control(self, key_drawing_area, event, key_widg):
         if event.type == gtk.gdk.BUTTON_PRESS:
@@ -264,13 +279,16 @@ class Gui:
         elif event == 'Edit key function...':
             prev_val = active_key.func
             func = active_key.set_funcc
-        else:  # event == 'Edit key colour...'
+        elif event == 'Edit key colour...':
             prev_val = active_key.colour
             func = active_key.set_colour
+        else:  # event == 'Link to modulator...':
+            prev_val = active_key.linked_mod
+            func = active_key.set_linked_mod
 
         entry = EntryDialog(parent=None,
                             flags=gtk.DIALOG_DESTROY_WITH_PARENT,
-                            message_format=event,
+                            message_format=event,  # the title of the entry dialog
                             buttons=gtk.BUTTONS_OK,
                             default_value=prev_val)
         entry.format_secondary_text('Please enter a new value')

@@ -11,6 +11,7 @@ class Key:
         self.midi_loc = midi_loc
         self.func = func
         self.state = state
+        self.linked_mod = None
         if colour is not None:
             self.colour = colour
         else:
@@ -53,6 +54,9 @@ class Key:
             self.colour = [int(x) for x in new_colour[1:-1].split(",")]  # make each item an integer
         elif new_colour in d.rgb_cols:  # it must be a named colour
             self.colour = d.rgb_cols[new_colour]
+
+    def set_linked_mod(self, new_mod):
+        self.linked_mod = new_mod
 
     def get_gtk_colour(self):
         gtk_colour = map(lambda rgb: int((rgb/255.0)*65535), self.colour)  # gtk does not accept regular rgb vals
