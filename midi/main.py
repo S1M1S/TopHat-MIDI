@@ -5,9 +5,9 @@ import rtmidi
 from rtmidi import midiconstants as rt_const
 from midi.pot import Pot
 from midi.key import Key
-import pickle #TODO: import cPickle as pickle
+import pickle  # TODO: import cPickle as pickle
 from rtmidi.midiutil import open_midiport
-import midi.defaults as default
+import midi.defaults as d
 
 
 class Engine():
@@ -15,20 +15,20 @@ class Engine():
         self.dir = None
         self.file = ''
         self.raw_data = ''
-        self.pots = [None]*default.NUM_OF_POTS
-        self.keys = [[None]*default.NUM_OF_KEYS_H for i in range(default.NUM_OF_KEYS_V)]
+        self.pots = [None]*d.NUM_OF_POTS
+        self.keys = [[None]*d.NUM_OF_KEYS_H for i in range(d.NUM_OF_KEYS_V)]
         self.midiout, self.portname = open_midiport(3, 'output')
 
     def open(self, filename):
-        self.pots = [None]*default.NUM_OF_POTS
+        self.pots = [None]*d.NUM_OF_POTS
         self.file = filename
         self.dir = os.path.split(self.file)[0] #get the directory of the file
         f = open(os.path.join(self.dir, self.file), 'rb')
 
-        for i in range(default.NUM_OF_POTS):
+        for i in range(d.NUM_OF_POTS):
             self.pots[i] = pickle.load(f)
-        for i in range(default.NUM_OF_KEYS_V):
-            for j in range(default.NUM_OF_KEYS_H):
+        for i in range(d.NUM_OF_KEYS_V):
+            for j in range(d.NUM_OF_KEYS_H):
                 self.keys[i][j] = pickle.load(f)
                 self.keys[i][j].post_load()
         f.close()
@@ -38,12 +38,12 @@ class Engine():
         self.file = filename + '.txt'
 
         #fill the file out with default things
-        for i in range(default.NUM_OF_POTS):
+        for i in range(d.NUM_OF_POTS):
             self.pots[i] = Pot(str(i), i, 'forward')
 
-        for i in range(default.NUM_OF_KEYS_V):
-            for j in range(default.NUM_OF_KEYS_H):
-                self.keys[i][j] = Key(default.KEY_NAMES[i][j], default.KEY_PARAMS[i][j], 'toggle')
+        for i in range(d.NUM_OF_KEYS_V):
+            for j in range(d.NUM_OF_KEYS_H):
+                self.keys[i][j] = Key(d.KEY_NAMES[i][j], d.KEY_PARAMS[i][j], 'toggle')
         self.save()
 
     def save(self):

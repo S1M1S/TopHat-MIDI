@@ -1,7 +1,7 @@
 __author__ = 'Celery'
 import rtmidi.midiconstants as m
 
-class Pot():
+class Pot:
     def __init__(self, name, midi_loc, func):
         self.name = name
         self.midi_loc = midi_loc
@@ -14,11 +14,11 @@ class Pot():
     def set_vel(self, new_vel):
         self.vel = new_vel
 
-    def change_name(self, new_name):
+    def set_name(self, new_name):
         self.name = new_name
 
-    def change_midi(self, new_midi):
+    def set_midi(self, new_midi):
         self.midi = new_midi
 
-    def change_function(self, new_func):
+    def set_function(self, new_func):
         self.function = new_func

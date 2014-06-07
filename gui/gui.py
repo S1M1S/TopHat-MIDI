@@ -4,24 +4,9 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 from midi.main import Engine
-from midi.key import Key
-from midi.pot import Pot
-import midi.defaults as default
-
-
-class KeyEle():
-    def __init__(self, parent, align, frame, box, drawing_area, entry, x_loc, y_loc):
-        self.parent = parent
-        self.frame = frame
-        self.align = align
-        self.box = box
-        self.drawing_area = drawing_area
-        self.entry = entry
-        self.x_loc = x_loc
-        self.y_loc = y_loc
-
-    def set_parent(self, new_parent):
-        self.parent = new_parent
+from gui.key_widg import KeyWidg
+from gui.pot_widg import PotWidge
+import midi.defaults as d
 
 
 class EntryDialog(gtk.MessageDialog):  # a class I found on stackoverflow - from user FriendFX
@@ -111,10 +96,9 @@ class Gui:
             self.key_menu.append(menu_item)
 
     def create_key_visual_components(self):
-        self.key_eles = [[None]*default.NUM_OF_KEYS_H for i in range(default.NUM_OF_KEYS_V)]
-        for i, row in enumerate(self.key_eles):
+        for i, row in enumerate(self.key_widgs):
             for j, cell in enumerate(row):
-                self.key_eles[i][j] = KeyEle(
+                self.key_widgs[i][j] = KeyWidg(
                     engine.keys[i][j],
                     gtk.Alignment(),
                     gtk.Frame(),
@@ -126,57 +110,57 @@ class Gui:
                 )
 
     def create_key_widgets(self):
-        self.key_grid = gtk.Table(default.NUM_OF_KEYS_H , default.NUM_OF_KEYS_V)
-        for i, row in enumerate(self.key_eles):
-            for j, key_ele in enumerate(row):
-                key_ele.align.set(0.5, 0.5, 0, 0)
-                key_ele.box.set_size_request(default.KEY_AREA_H, default.KEY_AREA_V+21)
-                key_ele.drawing_area.set_size_request(default.KEY_AREA_H, default.KEY_AREA_V)
-                key_ele.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
+        self.key_grid = gtk.Table(d.NUM_OF_KEYS_H , d.NUM_OF_KEYS_V)
+        for i, row in enumerate(self.key_widgs):
+            for j, key_widg in enumerate(row):
+                key_widg.align.set(0.5, 0.5, 0, 0)
+                key_widg.box.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V+21)
+                key_widg.drawing_area.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V)
+                key_widg.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
                                                 | gtk.gdk.BUTTON_PRESS_MASK
                                                 | gtk.gdk.BUTTON_RELEASE_MASK)  # drawing areas do not receive mouse clicks by default
-                key_ele.entry.set_text(key_ele.parent.name)
-                key_ele.entry.set_editable(False)
-                key_ele.entry.set_has_frame(False)
-                key_ele.entry.set_max_length(default.MAX_NAME_LENGTH)
-                key_ele.entry.set_alignment(0.5)
+                key_widg.entry.set_text(key_widg.parent.name)
+                key_widg.entry.set_editable(False)
+                key_widg.entry.set_has_frame(False)
+                key_widg.entry.set_max_length(d.MAX_NAME_LENGTH)
+                key_widg.entry.set_alignment(0.5)
 
-                key_ele.box.pack_start(key_ele.drawing_area)
-                key_ele.box.pack_end(key_ele.entry)
-                key_ele.align.add(key_ele.frame)
-                key_ele.frame.add(key_ele.box)
-                key_ele.entry.show()
-                key_ele.box.show()
-                key_ele.frame.show()
-                key_ele.align.show()
-                self.key_grid.attach(key_ele.align, key_ele.x_loc, key_ele.x_loc+1, key_ele.y_loc, key_ele.y_loc+1)
+                key_widg.box.pack_start(key_widg.drawing_area)
+                key_widg.box.pack_end(key_widg.entry)
+                key_widg.align.add(key_widg.frame)
+                key_widg.frame.add(key_widg.box)
+                key_widg.entry.show()
+                key_widg.box.show()
+                key_widg.frame.show()
+                key_widg.align.show()
+                self.key_grid.attach(key_widg.align, key_widg.x_loc, key_widg.x_loc+1, key_widg.y_loc, key_widg.y_loc+1)
 
-                key_ele.drawing_area.connect('expose_event', self.draw_key_widgets, key_ele)
-                key_ele.drawing_area.connect('button_release_event', self.key_control, key_ele)
-                key_ele.drawing_area.connect('button_press_event', self.key_control, key_ele)
-                key_ele.entry.connect('button_press_event', self.entry_control, key_ele)
-                # key_ele.entry.connect('key_press_event', self.entry_control, key_ele)
-                key_ele.entry.connect('focus_out_event', self.entry_control, key_ele)
+                key_widg.drawing_area.connect('expose_event', self.draw_key_widgets, key_widg)
+                key_widg.drawing_area.connect('button_release_event', self.key_control, key_widg)
+                key_widg.drawing_area.connect('button_press_event', self.key_control, key_widg)
+                key_widg.entry.connect('button_press_event', self.entry_control, key_widg)
+                # key_widg.entry.connect('key_press_event', self.entry_control, key_widg)
+                key_widg.entry.connect('focus_out_event', self.entry_control, key_widg)
 
-    def draw_key_widgets(self, key_drawing_area, event, key_ele):
+    def draw_key_widgets(self, key_drawing_area, event, key_widg):
         key_drawable = key_drawing_area.window
         key_drawable.set_cursor(gtk.gdk.Cursor(gtk.gdk.HAND1))
         context = key_drawable.new_gc()
         colour_map = key_drawing_area.get_colormap()
         context.set_values(foreground=colour_map.alloc('white'))
-        key_drawable.draw_rectangle(context, True, 0, 0, default.KEY_AREA_H, default.KEY_AREA_V)
+        key_drawable.draw_rectangle(context, True, 0, 0, d.KEY_AREA_H, d.KEY_AREA_V)
         context.set_values(foreground=colour_map.alloc('grey'), line_width=6, cap_style=gtk.gdk.CAP_ROUND, join_style=gtk.gdk.JOIN_ROUND)
         key_drawable.draw_rectangle(context, False, 10, 10, 80, 80)
-        if key_ele.parent.state:  # willed be filled according to its state of activation
-            r, g, b = key_ele.parent.get_gtk_colour()
+        if key_widg.parent.state:  # willed be filled according to its state of activation
+            r, g, b = key_widg.parent.get_gtk_colour()
             context.set_values(foreground=colour_map.alloc(r, g, b))
             key_drawable.draw_rectangle(context, True, 10+3, 10+3, 80-6, 80-6)
         return True
 
     def refresh_key_widgets(self):
-        for i, row in enumerate(self.key_eles):
-            for j, key_ele in enumerate(row):
-                key_ele.set_parent(engine.keys[i][j])
+        for i, row in enumerate(self.key_widgs):
+            for j, key_widg in enumerate(row):
+                key_widg.set_parent(engine.keys[i][j])
 
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -184,11 +168,12 @@ class Gui:
         self.window.set_size_request(800, 600)
         self.window.connect('delete_event', self.delete_event)
         self.create_menu()
+        self.key_widgs = [[None]*d.NUM_OF_KEYS_H for i in range(d.NUM_OF_KEYS_V)]
         self.create_key_visual_components()
         self.create_key_widgets()
-        for row in self.key_eles:
-            for key_ele in row:
-                key_ele.drawing_area.show()
+        for row in self.key_widgs:
+            for key_widg in row:
+                key_widg.drawing_area.show()
         self.key_grid.show()
         self.menu_separator.pack_start(self.key_grid)
         self.window.show()
@@ -235,21 +220,21 @@ class Gui:
         gtk.main_quit()
         return False
 
-    def key_control(self, key_drawing_area, event, key_ele):
+    def key_control(self, key_drawing_area, event, key_widg):
         if event.type == gtk.gdk.BUTTON_PRESS:
             if event.button == 1:
-                if key_ele.parent.set_state('press'):
-                    engine.midi_out(key_ele.parent.midi_loc, key_ele.parent.get_midi_vel())
+                if key_widg.parent.set_state('press'):
+                    engine.midi_out(key_widg.parent.midi_loc, key_widg.parent.get_midi_vel())
                 key_drawing_area.queue_draw()
             else:
-                self.selected_key_ele = key_ele  # so we know whose settings we are changing
+                self.selected_key_widg = key_widg  # so we know whose settings we are changing
                 self.key_menu.popup(None, None, None, event.button, event.time)  # give a context menu
         elif event.type == gtk.gdk.BUTTON_RELEASE:
-            key_ele.parent.set_state('release')
+            key_widg.parent.set_state('release')
             key_drawing_area.queue_draw()
         return True
 
-    def entry_control(self, entry, event, key_ele):
+    def entry_control(self, entry, event, key_widg):
         if event.type == gtk.gdk._2BUTTON_PRESS:
             entry.set_editable(True)
             entry.set_has_frame(True)
@@ -267,12 +252,12 @@ class Gui:
             if normalise:
                 entry.set_editable(False)
                 entry.set_has_frame(False)
-                key_ele.parent.set_name(entry.get_text())
+                key_widg.parent.set_name(entry.get_text())
                 entry.select_region(0, 0)
         return True
 
     def edit_key_attrs(self, menu, event, data=None):
-        active_key = self.selected_key_ele.parent
+        active_key = self.selected_key_widg.parent
         if event == 'Edit CC number...':
             prev_val = active_key.midi_loc
             func = active_key.set_midi_loc

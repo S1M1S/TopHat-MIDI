@@ -1,11 +1,11 @@
 __author__ = 'Celery'
 
-from defaults import rgb_cols
+import midi.defaults as d
 import pygtk
 import gtk
 
 
-class Key():
+class Key:
     def __init__(self, name, midi_loc, func, colour=None, state=False):
         self.name = name
         self.midi_loc = midi_loc
@@ -14,7 +14,7 @@ class Key():
         if colour is not None:
             self.colour = colour
         else:
-            self.colour = rgb_cols['red']  # defaults to red
+            self.colour = d.rgb_cols['red']  # defaults to red
 
     def pre_save(self):  # called just before saving
         if self.func == 'hold':
@@ -51,8 +51,8 @@ class Key():
     def set_colour(self, new_colour):
         if new_colour.startswith(('(','[')):  # it must be an rgb tuple or list
             self.colour = [int(x) for x in new_colour[1:-1].split(",")]  # make each item an integer
-        elif new_colour in rgb_cols:  # it must be a named colour
-            self.colour = rgb_cols[new_colour]
+        elif new_colour in d.rgb_cols:  # it must be a named colour
+            self.colour = d.rgb_cols[new_colour]
 
     def get_gtk_colour(self):
         gtk_colour = map(lambda rgb: int((rgb/255.0)*65535), self.colour)  # gtk does not accept regular rgb vals
