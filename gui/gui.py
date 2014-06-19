@@ -222,7 +222,10 @@ class Gui:
     def open_file(self, widget, event, data=None):
         open_file_window = gtk.FileChooserDialog(title='Select a file to open',
                                                  parent=self.window,
-                                                 buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                                 buttons=(gtk.STOCK_CANCEL,
+                                                          gtk.RESPONSE_CANCEL,
+                                                          gtk.STOCK_OPEN,
+                                                          gtk.RESPONSE_OK))
         event = open_file_window.run()
         if event == gtk.RESPONSE_OK:
             engine.open(open_file_window.get_filename())
@@ -239,7 +242,7 @@ class Gui:
         if event.type == gtk.gdk.BUTTON_PRESS:
             if event.button == 1:
                 if key_widg.parent.set_state('press'):
-                    engine.midi_out(key_widg.parent.midi_loc, key_widg.parent.get_midi_vel())
+                    engine.midi_out(key_widg.parent.midi_loc, key_widg.parent.get_midi_vel(), key_widg.parent.state)
                 key_drawing_area.queue_draw()
             else:
                 self.selected_key_widg = key_widg  # so we know whose settings we are changing
@@ -278,7 +281,7 @@ class Gui:
             func = active_key.set_midi_loc
         elif event == 'Edit key function...':
             prev_val = active_key.func
-            func = active_key.set_funcc
+            func = active_key.set_func
         elif event == 'Edit key colour...':
             prev_val = active_key.colour
             func = active_key.set_colour

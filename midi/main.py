@@ -6,7 +6,6 @@ from rtmidi import midiconstants as rt_const
 from midi.pot import Pot
 from midi.key import Key
 import pickle  # TODO: import cPickle as pickle
-from rtmidi.midiutil import open_midiport
 import midi.defaults as d
 
 
@@ -17,7 +16,12 @@ class Engine():
         self.raw_data = ''
         self.pots = [None]*d.NUM_OF_POTS
         self.keys = [[None]*d.NUM_OF_KEYS_H for i in range(d.NUM_OF_KEYS_V)]
-        self.midiout, self.portname = open_midiport(3, 'output')
+        self.midiout = rtmidi.MidiOut()
+        midi_ports = self.midiout.get_ports()
+        for i, port in enumerate(midi_ports):
+            print i, port
+        self.midiout.open_port(2)
+        print
 
     def open(self, filename):
         self.pots = [None]*d.NUM_OF_POTS
@@ -56,8 +60,13 @@ class Engine():
                 pickle.dump(key, f)
         f.close()
 
-    def midi_out(self, midi_signal, midi_vel):
-        self.midiout.send_message([rt_const.CONTROLLER_CHANGE, midi_signal, midi_vel])
+    def midi_out(self, midi_signal, midi_vel, key_state):
+        if key_state:
+            midi_channel = rt_const.NOTE_ON
+        else:  # key_state == False
+            midi_channel = rt_const.NOTE_OFF
+        print midi_channel, midi_signal, midi_vel
+        self.midiout.send_message([midi_channel, midi_signal+60, midi_vel])
 
 
 if __name__ == '__main__':
