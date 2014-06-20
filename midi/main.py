@@ -37,6 +37,11 @@ class Engine():
                 self.keys[i][j].post_load()
         f.close()
 
+    def save_as(self, filename, project_dir):
+        self.dir = project_dir
+        self.file = filename + '.txt'
+        self.save()
+
     def new_file(self, filename, project_dir):
         self.dir = project_dir
         self.file = filename + '.txt'
@@ -65,7 +70,6 @@ class Engine():
             midi_channel = rt_const.NOTE_ON
         else:  # key_state == False
             midi_channel = rt_const.NOTE_OFF
-        print midi_channel, midi_signal, midi_vel
         self.midiout.send_message([midi_channel, midi_signal+60, midi_vel])
 
 

@@ -197,8 +197,10 @@ class Gui:
     def new_file(self, widget, event, data=None):
         if event == 'New':
             title = 'Create a new file'
+            func = engine.new_file
         elif event == 'Save As':
             title = 'Save as'
+            func = engine.save_as
         new_file_window = gtk.FileChooserDialog(title=title,
                                                 parent=self.window,
                                                 action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -214,7 +216,7 @@ class Gui:
         event = new_file_window.run()
 
         if event == gtk.RESPONSE_OK:
-            engine.new_file(filename_input.get_text(), new_file_window.get_filename())
+            func(filename_input.get_text(), new_file_window.get_filename())
             self.refresh_key_widgets()
         new_file_window.destroy()
         self.window.queue_draw()
