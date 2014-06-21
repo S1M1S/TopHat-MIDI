@@ -16,6 +16,7 @@ class Key:
             self.colour = colour
         else:
             self.colour = d.rgb_cols['red']  # defaults to red
+        self.available_funcs = ('toggle', 'hold', 'modulate')
 
     def pre_save(self):  # called just before saving
         if self.func == 'hold':
@@ -58,7 +59,7 @@ class Key:
 
     def set_func(self, new_func):
         success = False
-        if new_func in ('toggle', 'hold'):  # if it is an acceptable function
+        if new_func in self.available_funcs:  # if it is an acceptable function
             self.func = new_func
             success = True
         return success
@@ -88,3 +89,6 @@ class Key:
 
     def get_midi_vel(self):
         return self.state*127  # return either 0 or 127
+
+    def get_available_funcs(self):
+        return self.available_funcs

@@ -7,6 +7,12 @@ NUM_OF_KEYS_V = 4
 KEY_AREA_H = 100
 KEY_AREA_V = 100
 
+OPTION_AREA_H = KEY_AREA_H + 30
+OPTION_MENU_X = 2
+OPTION_MENU_Y = 4
+
+LABEL_HEIGHT = 21
+
 MAX_NAME_LENGTH = 10
 KEY_PARAMS = [[0+i, 1+i, 2+i, 3+i] for i in range(4)]  # default key params, 2D list from 0 to 15
 KEY_NAMES = [['CC#'+str(col) for col in row] for row in KEY_PARAMS]  # convert params to names

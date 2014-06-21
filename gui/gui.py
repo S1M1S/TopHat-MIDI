@@ -3,6 +3,7 @@ __author__ = 'Celery'
 import pygtk
 pygtk.require('2.0')
 import gtk
+print gtk.pygtk_version, gtk.gtk_version
 from midi.main import Engine
 from key_widg import KeyWidg
 from pot_widg import PotWidg
@@ -110,15 +111,24 @@ class Gui:
     def create_key_visual_components(self):
         for i, row in enumerate(self.key_widgs):
             for j, cell in enumerate(row):
-                self.key_widgs[i][j] = KeyWidg(
+                key_widg = self.key_widgs[i][j] = KeyWidg(
                     engine.keys[i][j],
                     gtk.Alignment(),
                     gtk.Frame(),
+                    gtk.HBox(),
                     gtk.VBox(),
                     gtk.DrawingArea(),
                     gtk.Entry(),
                     i,
                     j
+                )
+                key_widg.create_option_menu(
+                    gtk.Frame(),
+                    gtk.Table(d.OPTION_MENU_X, d.OPTION_MENU_Y),
+                    (gtk.Label(), gtk.Entry()),
+                    (gtk.Label(), gtk.Entry()),
+                    (gtk.Label(), gtk.Entry()),
+                    (gtk.Label(), gtk.combo_box_new_text())
                 )
 
     def create_key_widgets(self):
@@ -126,7 +136,7 @@ class Gui:
         for i, row in enumerate(self.key_widgs):
             for j, key_widg in enumerate(row):
                 key_widg.align.set(0.5, 0.5, 0, 0)
-                key_widg.box.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V+21)
+                key_widg.key_box.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V+d.LABEL_HEIGHT)
                 key_widg.drawing_area.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V)
                 key_widg.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
                                                 | gtk.gdk.BUTTON_PRESS_MASK
@@ -137,13 +147,49 @@ class Gui:
                 key_widg.entry.set_max_length(d.MAX_NAME_LENGTH)
                 key_widg.entry.set_alignment(0.5)
 
-                key_widg.box.pack_start(key_widg.drawing_area)
-                key_widg.box.pack_end(key_widg.entry)
-                key_widg.align.add(key_widg.frame)
-                key_widg.frame.add(key_widg.box)
+                key_widg.opt_frame.set_size_request(d.OPTION_AREA_H, d.KEY_AREA_V+d.LABEL_HEIGHT)
+
+                key_widg.opt_name_lbl.set_text('Name:')
+                key_widg.opt_table.attach(key_widg.opt_name_lbl, 0, 1, 0, 1)
+                key_widg.opt_name_lbl.show()
+                key_widg.opt_name.set_text(key_widg.parent.name)
+                key_widg.opt_name.set_width_chars(5)
+                key_widg.opt_table.attach(key_widg.opt_name, 1, 2, 0, 1, xoptions=gtk.SHRINK|gtk.FILL)
+                key_widg.opt_name.show()
+                key_widg.opt_cc_num_lbl.set_text('CC:')
+                key_widg.opt_table.attach(key_widg.opt_cc_num_lbl, 0, 1, 1, 2)
+                key_widg.opt_cc_num_lbl.show()
+                key_widg.opt_cc_num.set_text(str(key_widg.parent.midi_loc))
+                key_widg.opt_table.attach(key_widg.opt_cc_num, 1, 2, 1, 2, xoptions=gtk.SHRINK|gtk.FILL)
+                key_widg.opt_cc_num.show()
+                key_widg.opt_colour_lbl.set_text('Colour:')
+                key_widg.opt_table.attach(key_widg.opt_colour_lbl, 0, 1, 2, 3)
+                key_widg.opt_colour_lbl.show()
+                key_widg.opt_colour.set_text(str(key_widg.parent.colour))
+                key_widg.opt_table.attach(key_widg.opt_colour, 1, 2, 2, 3, xoptions=gtk.SHRINK|gtk.FILL)
+                key_widg.opt_colour.show()
+                key_widg.opt_func_lbl.set_text('Func:')
+                key_widg.opt_table.attach(key_widg.opt_func_lbl, 0, 1, 3, 4)
+                key_widg.opt_func_lbl.show()
+                [key_widg.opt_func.append_text(func_name) for func_name in key_widg.parent.get_available_funcs()]
+                key_widg.opt_func.set_active(key_widg.parent.get_available_funcs().index(key_widg.parent.func))
+                key_widg.opt_table.attach(key_widg.opt_func, 1, 2, 3, 4, xoptions=gtk.SHRINK|gtk.FILL)
+                key_widg.opt_func.show()
+
+                key_widg.key_box.pack_start(key_widg.drawing_area)
+                key_widg.key_box.pack_end(key_widg.entry)
+                key_widg.frame.add(key_widg.key_box)
+                key_widg.opt_frame.add(key_widg.opt_table)
+                key_widg.h_box.pack_start(key_widg.frame)
+                key_widg.h_box.pack_end(key_widg.opt_frame)
+                key_widg.align.add(key_widg.h_box)
+
                 key_widg.entry.show()
-                key_widg.box.show()
+                key_widg.key_box.show()
+                key_widg.opt_table.show()
+                key_widg.h_box.show()
                 key_widg.frame.show()
+                key_widg.opt_frame.show()
                 key_widg.align.show()
                 self.key_grid.attach(key_widg.align, key_widg.x_loc, key_widg.x_loc+1, key_widg.y_loc, key_widg.y_loc+1)
 
