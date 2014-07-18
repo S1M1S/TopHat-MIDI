@@ -3,12 +3,10 @@ __author__ = 'Celery'
 import pygtk
 pygtk.require('2.0')
 import gtk
-print gtk.pygtk_version, gtk.gtk_version
+from widgets.key_widg import KeyWidg
+from widgets.pot_widg import PotWidg
 from midi.main import Engine
-from key_widg import KeyWidg
-from pot_widg import PotWidg
-from mod_widg import ModWidg
-import midi.defaults as d
+import midi.defaults.defaults as d
 
 
 class EntryDialog(gtk.MessageDialog):  # a class I found on stackoverflow - from user FriendFX
@@ -90,7 +88,12 @@ class Gui:
         newobj_menu.show()
 
         self.menu_separator = gtk.VBox()
-        self.window.add(self.menu_separator)
+        self.scrolled_window = gtk.ScrolledWindow()
+        self.scrolled_window.add_with_viewport(self.menu_separator)
+        self.window.add(self.scrolled_window)
+        self.scrolled_window.set_policy(gtk.POLICY_AUTOMATIC,
+                                        gtk.POLICY_AUTOMATIC)  # make the scrollbars show only when needed
+        self.scrolled_window.show()
         self.menu_separator.show()
 
         self.menu_bar = gtk.MenuBar()
@@ -108,112 +111,23 @@ class Gui:
             menu_item = self.new_menu_item(name, func=func)
             self.key_menu.append(menu_item)
 
-    def create_key_visual_components(self):
-        for i, row in enumerate(self.key_widgs):
-            for j, cell in enumerate(row):
-                key_widg = self.key_widgs[i][j] = KeyWidg(
-                    engine.keys[i][j],
-                    gtk.Alignment(),
-                    gtk.Frame(),
-                    gtk.HBox(),
-                    gtk.VBox(),
-                    gtk.DrawingArea(),
-                    gtk.Entry(),
-                    i,
-                    j
-                )
-                key_widg.create_option_menu(
-                    gtk.Frame(),
-                    gtk.Table(d.OPTION_MENU_X, d.OPTION_MENU_Y),
-                    (gtk.Label(), gtk.Entry()),
-                    (gtk.Label(), gtk.Entry()),
-                    (gtk.Label(), gtk.Entry()),
-                    (gtk.Label(), gtk.combo_box_new_text())
-                )
+    def create_pot_widgs(self):
+        for y in range(d.NUM_OF_POTS_V):
+            self.pot_widgs.append([])
+            for x in range(d.NUM_OF_POTS_H):
+                parent = engine.pots[y][x]
+                self.pot_widgs[y].append(PotWidg(parent, engine))
+                cur_widg = self.pot_widgs[y][x]
+                self.pot_grid.attach(cur_widg.alignment, x, x+1, y, y+1)
 
-    def create_key_widgets(self):
-        self.key_grid = gtk.Table(d.NUM_OF_KEYS_H , d.NUM_OF_KEYS_V)
-        for i, row in enumerate(self.key_widgs):
-            for j, key_widg in enumerate(row):
-                key_widg.align.set(0.5, 0.5, 0, 0)
-                key_widg.key_box.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V+d.LABEL_HEIGHT)
-                key_widg.drawing_area.set_size_request(d.KEY_AREA_H, d.KEY_AREA_V)
-                key_widg.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
-                                                | gtk.gdk.BUTTON_PRESS_MASK
-                                                | gtk.gdk.BUTTON_RELEASE_MASK)  # drawing areas do not receive mouse clicks by default
-                key_widg.entry.set_text(key_widg.parent.name)
-                key_widg.entry.set_editable(False)
-                key_widg.entry.set_has_frame(False)
-                key_widg.entry.set_max_length(d.MAX_NAME_LENGTH)
-                key_widg.entry.set_alignment(0.5)
-
-                key_widg.opt_frame.set_size_request(d.OPTION_AREA_H, d.KEY_AREA_V+d.LABEL_HEIGHT)
-
-                key_widg.opt_name_lbl.set_text('Name:')
-                key_widg.opt_table.attach(key_widg.opt_name_lbl, 0, 1, 0, 1)
-                key_widg.opt_name_lbl.show()
-                key_widg.opt_name.set_text(key_widg.parent.name)
-                key_widg.opt_name.set_width_chars(5)
-                key_widg.opt_table.attach(key_widg.opt_name, 1, 2, 0, 1, xoptions=gtk.SHRINK|gtk.FILL)
-                key_widg.opt_name.show()
-                key_widg.opt_cc_num_lbl.set_text('CC:')
-                key_widg.opt_table.attach(key_widg.opt_cc_num_lbl, 0, 1, 1, 2)
-                key_widg.opt_cc_num_lbl.show()
-                key_widg.opt_cc_num.set_text(str(key_widg.parent.midi_loc))
-                key_widg.opt_table.attach(key_widg.opt_cc_num, 1, 2, 1, 2, xoptions=gtk.SHRINK|gtk.FILL)
-                key_widg.opt_cc_num.show()
-                key_widg.opt_colour_lbl.set_text('Colour:')
-                key_widg.opt_table.attach(key_widg.opt_colour_lbl, 0, 1, 2, 3)
-                key_widg.opt_colour_lbl.show()
-                key_widg.opt_colour.set_text(str(key_widg.parent.colour))
-                key_widg.opt_table.attach(key_widg.opt_colour, 1, 2, 2, 3, xoptions=gtk.SHRINK|gtk.FILL)
-                key_widg.opt_colour.show()
-                key_widg.opt_func_lbl.set_text('Func:')
-                key_widg.opt_table.attach(key_widg.opt_func_lbl, 0, 1, 3, 4)
-                key_widg.opt_func_lbl.show()
-                [key_widg.opt_func.append_text(func_name) for func_name in key_widg.parent.get_available_funcs()]
-                key_widg.opt_func.set_active(key_widg.parent.get_available_funcs().index(key_widg.parent.func))
-                key_widg.opt_table.attach(key_widg.opt_func, 1, 2, 3, 4, xoptions=gtk.SHRINK|gtk.FILL)
-                key_widg.opt_func.show()
-
-                key_widg.key_box.pack_start(key_widg.drawing_area)
-                key_widg.key_box.pack_end(key_widg.entry)
-                key_widg.frame.add(key_widg.key_box)
-                key_widg.opt_frame.add(key_widg.opt_table)
-                key_widg.h_box.pack_start(key_widg.frame)
-                key_widg.h_box.pack_end(key_widg.opt_frame)
-                key_widg.align.add(key_widg.h_box)
-
-                key_widg.entry.show()
-                key_widg.key_box.show()
-                key_widg.opt_table.show()
-                key_widg.h_box.show()
-                key_widg.frame.show()
-                key_widg.opt_frame.show()
-                key_widg.align.show()
-                self.key_grid.attach(key_widg.align, key_widg.x_loc, key_widg.x_loc+1, key_widg.y_loc, key_widg.y_loc+1)
-
-                key_widg.drawing_area.connect('expose_event', self.draw_key_widgets, key_widg)
-                key_widg.drawing_area.connect('button_release_event', self.key_control, key_widg)
-                key_widg.drawing_area.connect('button_press_event', self.key_control, key_widg)
-                key_widg.entry.connect('button_press_event', self.entry_control, key_widg)
-                # key_widg.entry.connect('key_press_event', self.entry_control, key_widg)
-                key_widg.entry.connect('focus_out_event', self.entry_control, key_widg)
-
-    def draw_key_widgets(self, key_drawing_area, event, key_widg):
-        key_drawable = key_drawing_area.window
-        key_drawable.set_cursor(gtk.gdk.Cursor(gtk.gdk.HAND1))
-        context = key_drawable.new_gc()
-        colour_map = key_drawing_area.get_colormap()
-        context.set_values(foreground=colour_map.alloc('white'))
-        key_drawable.draw_rectangle(context, True, 0, 0, d.KEY_AREA_H, d.KEY_AREA_V)
-        context.set_values(foreground=colour_map.alloc('grey'), line_width=6, cap_style=gtk.gdk.CAP_ROUND, join_style=gtk.gdk.JOIN_ROUND)
-        key_drawable.draw_rectangle(context, False, 10, 10, 80, 80)
-        if key_widg.parent.state:  # willed be filled according to its state of activation
-            r, g, b = key_widg.parent.get_gtk_colour()
-            context.set_values(foreground=colour_map.alloc(r, g, b))
-            key_drawable.draw_rectangle(context, True, 10+3, 10+3, 80-6, 80-6)
-        return True
+    def create_key_widgs(self):
+        for y in range(d.NUM_OF_KEYS_V):
+            self.key_widgs.append([])
+            for x in range(d.NUM_OF_KEYS_V):
+                parent = engine.keys[y][x]
+                self.key_widgs[y].append(KeyWidg(parent, engine))
+                cur_widg = self.key_widgs[y][x]
+                self.key_grid.attach(cur_widg.alignment, x, x+1, y, y+1)
 
     def refresh_key_widgets(self):
         for i, row in enumerate(self.key_widgs):
@@ -223,17 +137,23 @@ class Gui:
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title('TopHat MIDI')
-        self.window.set_size_request(800, 600)
+        self.window.set_default_size(800, 600)
         self.window.connect('delete_event', self.delete_event)
         self.create_menu()
-        self.key_widgs = [[None]*d.NUM_OF_KEYS_H for i in range(d.NUM_OF_KEYS_V)]
-        self.create_key_visual_components()
-        self.create_key_widgets()
-        for row in self.key_widgs:
-            for key_widg in row:
-                key_widg.drawing_area.show()
+        self.widget_separator = gtk.HBox()
+        self.pot_widgs = []
+        self.key_widgs = []
+        self.pot_grid = gtk.Table(d.NUM_OF_POTS_H, d.NUM_OF_POTS_V)
+        self.key_grid = gtk.Table(d.NUM_OF_KEYS_H, d.NUM_OF_KEYS_V)
+        self.create_pot_widgs()
+        self.create_key_widgs()
+        self.widget_separator.pack_start(self.pot_grid)
+        self.widget_separator.pack_start(self.key_grid)
+        self.menu_separator.pack_start(self.widget_separator)
+        self.pot_grid.show()
         self.key_grid.show()
-        self.menu_separator.pack_start(self.key_grid)
+        self.widget_separator.show()
+        self.menu_separator.show()
         self.window.show()
 
     def delete_event(self, widget, event, data=None):

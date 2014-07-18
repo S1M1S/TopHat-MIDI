@@ -1,12 +1,12 @@
 __author__ = 'Celery'
 import os
-import sys
+import cPickle as pickle
 import rtmidi
 from rtmidi import midiconstants as rt_const
-from midi.pot import Pot
-from midi.key import Key
-import pickle  # TODO: import cPickle as pickle
-import midi.defaults as d
+
+from midi.objects.pot import Pot
+from midi.objects.key import Key
+import midi.defaults.defaults as d
 
 
 class Engine():
@@ -14,23 +14,21 @@ class Engine():
         self.dir = None
         self.file = ''
         self.raw_data = ''
-        self.pots = [None]*d.NUM_OF_POTS
+        self.pots = [[None]*d.NUM_OF_POTS_H for i in range(d.NUM_OF_POTS_V)]
         self.keys = [[None]*d.NUM_OF_KEYS_H for i in range(d.NUM_OF_KEYS_V)]
         self.midiout = rtmidi.MidiOut()
         midi_ports = self.midiout.get_ports()
-        for i, port in enumerate(midi_ports):
-            print i, port
         self.midiout.open_port(2)
-        print
 
     def open(self, filename):
-        self.pots = [None]*d.NUM_OF_POTS
         self.file = filename
-        self.dir = os.path.split(self.file)[0] #get the directory of the file
+        self.dir = os.path.split(self.file)[0]  # get the directory of the file
         f = open(os.path.join(self.dir, self.file), 'rb')
 
-        for i in range(d.NUM_OF_POTS):
-            self.pots[i] = pickle.load(f)
+        for i in range(d.NUM_OF_POTS_V):
+            for j in range(d.NUM_OF_POTS_H):
+                self.pots[i][j] = pickle.load(f)
+
         for i in range(d.NUM_OF_KEYS_V):
             for j in range(d.NUM_OF_KEYS_H):
                 self.keys[i][j] = pickle.load(f)
@@ -47,18 +45,22 @@ class Engine():
         self.file = filename + '.txt'
 
         #fill the file out with default things
-        for i in range(d.NUM_OF_POTS):
-            self.pots[i] = Pot(str(i), i, 'forward')
+        for i in range(d.NUM_OF_POTS_V):
+            for j in range(d.NUM_OF_POTS_H):
+                self.pots[i][j] = Pot(d.POT_NAMES[i][j], d.POT_CCS[i][j], 'forward')
 
         for i in range(d.NUM_OF_KEYS_V):
             for j in range(d.NUM_OF_KEYS_H):
-                self.keys[i][j] = Key(d.KEY_NAMES[i][j], d.KEY_PARAMS[i][j], 'toggle')
+                self.keys[i][j] = Key(d.KEY_NAMES[i][j], d.KEY_CCS[i][j], 'toggle')
         self.save()
 
     def save(self):
+        if not os.path.isdir(self.dir):
+            os.mkdir(self.dir)
         f = open(os.path.join(self.dir, self.file), 'wb')
-        for pot in self.pots:
-            pickle.dump(pot, f)
+        for row in self.pots:
+            for pot in row:
+                pickle.dump(pot, f)
         for row in self.keys:
             for key in row:
                 key.pre_save()
@@ -70,7 +72,7 @@ class Engine():
             midi_channel = rt_const.NOTE_ON
         else:  # key_state == False
             midi_channel = rt_const.NOTE_OFF
-        self.midiout.send_message([midi_channel, midi_signal+60, midi_vel])
+        self.midiout.send_message([midi_channel, midi_signal, midi_vel])
 
 
 if __name__ == '__main__':

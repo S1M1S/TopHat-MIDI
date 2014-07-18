@@ -1,7 +1,7 @@
 __author__ = 'Celery'
 import unittest
 
-from midi.key import Key
+from midi.objects.key import Key
 
 class TestKey(unittest.TestCase):
     cls = Key('name', 0, 'toggle')
