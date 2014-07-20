@@ -1,5 +1,4 @@
 import gtk
-
 import midi.defaults.defaults as d
 
 
@@ -47,6 +46,8 @@ class BaseWidg():
 
     def set_parent(self, new_parent):
         self.parent = new_parent
+        self.label.set_text(self.parent.get_name())
+        self.option_widg.update_text()
 
     def get_parent(self):
         return self.parent

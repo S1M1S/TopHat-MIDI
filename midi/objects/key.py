@@ -7,7 +7,7 @@ import midi.defaults.defaults as d
 class Key(Base):
     def __init__(self, name, midi_loc, func, colour=None, state=False):
         Base.__init__(self, name, midi_loc, func, colour=None, state=False)
-        self.available_funcs = ('toggle', 'hold', 'modulate')
+        self.available_funcs = ('toggle', 'hold')
 
     def set_state(self, mouse_state):
         change_state = False

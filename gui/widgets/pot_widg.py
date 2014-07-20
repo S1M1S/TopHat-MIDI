@@ -11,12 +11,12 @@ import midi.defaults.defaults as d
 class PotWidg(BaseWidg):
     def __init__(self, parent, engine):
         BaseWidg.__init__(self, parent, engine)
+        self.option_widg = OptionWidg(self)
 
         self.set_label_text(parent.get_name())
         self.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
                                      | gtk.gdk.BUTTON1_MOTION_MASK
                                      | gtk.gdk.BUTTON_PRESS_MASK)
-        self.option_widg = OptionWidg(self)
         self.options_visible = False
         self.still_dragging = self.drag_start = False
         self.start_pos = 0

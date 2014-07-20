@@ -9,12 +9,12 @@ import midi.defaults.defaults as d
 class KeyWidg(BaseWidg):
     def __init__(self, parent, engine):
         BaseWidg.__init__(self, parent, engine)
+        self.option_widg = OptionWidg(self)
 
         self.set_label_text(parent.get_name())
-        self.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK  # drawing areas
-                                     | gtk.gdk.BUTTON_PRESS_MASK  # do not receive mouse
-                                     | gtk.gdk.BUTTON_RELEASE_MASK)  # clicks by default
-        self.option_widg = OptionWidg(self)
+        self.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK              # drawing areas
+                                     | gtk.gdk.BUTTON_PRESS_MASK        # do not receive mouse clicks
+                                     | gtk.gdk.BUTTON_RELEASE_MASK)     # by default
         self.h_box.pack_end(self.option_widg.alignment)
         self.connect()
         self.show_self()
@@ -51,11 +51,13 @@ class KeyWidg(BaseWidg):
         return True
 
     def fill(self):  # whether or not to draw the coloured square in the middle
+        r, g, b = self.parent.get_gtk_colour()
         if self.parent.state:  # it should be filled
-            r, g, b = self.parent.get_gtk_colour()
             self.context.set_values(foreground=self.colour_map.alloc(r, g, b))
         else:
-            self.context.set_values(foreground=self.colour_map.alloc('white'))
+            self.context.set_values(foreground=self.colour_map.alloc(int(r + (65535 - r) / 1.04),
+                                                                     int(g + (65535 - g) / 1.04),
+                                                                     int(b + (65535 - b) / 1.04)))
         self.surface.draw_rectangle(self.context,
                                     True,
                                     d.DRAWING_AREA_INDENT + d.DRAWING_AREA_OUTLINE_THICKNESS / 2,
@@ -73,6 +75,9 @@ class KeyWidg(BaseWidg):
                     self.fill()
             elif event.type == gtk.gdk.BUTTON_RELEASE:
                 if self.parent.set_state('release'):
+                    self.send_midi_msg(self.parent.get_channel(),
+                                       self.parent.get_midi_loc(),
+                                       self.parent.get_midi_vel())
                     self.fill()
         elif event.button == 3 and event.type == gtk.gdk.BUTTON_PRESS:  # right click
             self.options_visible = not self.options_visible  # toggle boolean

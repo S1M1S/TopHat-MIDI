@@ -9,38 +9,6 @@ from midi.main import Engine
 import midi.defaults.defaults as d
 
 
-class EntryDialog(gtk.MessageDialog):  # a class I found on stackoverflow - from user FriendFX
-    def __init__(self, *args, **kwargs):
-        '''
-        Creates a new EntryDialog. Takes all the arguments of the usual
-        MessageDialog constructor plus one optional named argument
-        "default_value" to specify the initial contents of the entry.
-        '''
-        if 'default_value' in kwargs:
-            default_value = kwargs['default_value']
-            del kwargs['default_value']
-        else:
-            default_value = ''
-        super(EntryDialog, self).__init__(*args, **kwargs)
-        entry = gtk.Entry()
-        entry.set_text(str(default_value))
-        entry.connect("activate",
-                      lambda ent, dlg, resp: dlg.response(resp),
-                      self, gtk.RESPONSE_OK)
-        self.vbox.pack_end(entry, True, True, 0)
-        self.vbox.show_all()
-        self.entry = entry
-    def set_value(self, text):
-        self.entry.set_text(text)
-    def run(self):
-        result = super(EntryDialog, self).run()
-        if result == gtk.RESPONSE_OK:
-            text = self.entry.get_text()
-        else:
-            text = None
-        return text
-
-
 class Gui:
     def new_menu_item(self, name, img=None, accel=None, func=None, *args):
         if img is not None:
@@ -129,7 +97,7 @@ class Gui:
                 cur_widg = self.key_widgs[y][x]
                 self.key_grid.attach(cur_widg.alignment, x, x+1, y, y+1)
 
-    def refresh_key_widgets(self):
+    def refresh_widgets(self):
         for i, row in enumerate(self.key_widgs):
             for j, key_widg in enumerate(row):
                 key_widg.set_parent(engine.keys[i][j])
@@ -183,7 +151,7 @@ class Gui:
 
         if event == gtk.RESPONSE_OK:
             func(filename_input.get_text(), new_file_window.get_filename())
-            self.refresh_key_widgets()
+            self.refresh_widgets()
         new_file_window.destroy()
         self.window.queue_draw()
 
@@ -197,7 +165,7 @@ class Gui:
         event = open_file_window.run()
         if event == gtk.RESPONSE_OK:
             engine.open(open_file_window.get_filename())
-            self.refresh_key_widgets()
+            self.refresh_widgets()
         open_file_window.destroy()
 
     def save_file(self, widget, event, data=None):

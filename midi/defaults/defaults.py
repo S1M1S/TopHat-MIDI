@@ -34,7 +34,7 @@ MAX_NAME_LENGTH = 10
 POT_CCS = [[0+i, 1+i, 2+i, 3+i] for i in range(0, NUM_OF_POTS_V*NUM_OF_POTS_H, NUM_OF_POTS_H)]
 POT_NAMES = [['CC#'+str(col) for col in row] for row in POT_CCS]
 
-KEY_CCS = [[8+i, 9+i, 10+i, 11+i] for i in range(0, 16, 4)]  # default key params, 2D list from 0 to 15
+KEY_CCS = [[64+i, 65+i, 66+i, 67+i] for i in range(0, 16, 4)]  # default key params, 2D list from 0 to 15
 KEY_NAMES = [['CC#'+str(col) for col in row] for row in KEY_CCS]  # convert params to names
 
 rgb_cols = {}

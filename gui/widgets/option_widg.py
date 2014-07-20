@@ -8,16 +8,15 @@ import midi.defaults.defaults as d
 class OptionWidg(BaseWidg):
     def __init__(self, linked_widg):
         self.lnkd_widg = linked_widg
-        lwp = linked_widg.get_parent()
+        lwp = self.lnkd_widg.get_parent()
         self.alignment = gtk.Alignment()
         self.frame = gtk.Frame()
-        parent_type = lwp.__class__.__name__
-        if parent_type == 'Pot':
+        if lwp.__class__.__name__ == 'Pot':
             option_menu_y = d.OPTION_MENU_Y + 1
         else:
             option_menu_y = d.OPTION_MENU_Y
 
-        self.table = gtk.Table(d.OPTIjuON_MENU_X, option_menu_y)
+        self.table = gtk.Table(d.OPTION_MENU_X, option_menu_y)
         self.labels = [gtk.Label() for i in range(option_menu_y)]
         self.entries = [gtk.Entry() for i in range(option_menu_y - 1)]
         self.combo_box = gtk.combo_box_new_text()
@@ -29,24 +28,17 @@ class OptionWidg(BaseWidg):
                       'CC no:',
                       'Colour:',
                       'Func:']
-        if parent_type == 'Pot':
+        if lwp.__class__.__name__ == 'Pot':
             label_data.insert(3, 'Steps:')
         for i, label in enumerate(self.labels):
             label.set_text(label_data[i])
             label.set_alignment(xalign=1.0, yalign=0.5)
             self.table.attach(label, 0, 1, i, i + 1, xpadding=d.OPTION_PADDING)
-
-        entry_data = [(lwp.get_name(), lwp.set_name, ('name', self.lnkd_widg.label)),
-                      (lwp.get_midi_loc(), lwp.set_midi_loc, ('cc no')),
-                      (lwp.get_colour(), lwp.set_colour, ('colour', self.lnkd_widg.fill))]
-        if parent_type == 'Pot':
-            entry_data.append((lwp.get_num_steps(), lwp.set_num_steps, ('steps')))
+        self.update_text()
         for i, entry in enumerate(self.entries):
-            entry.set_text(str(entry_data[i][0]))
-            entry.connect('activate', self.entry_callback, entry_data[i][1], entry_data[i][2])
             self.table.attach(entry, 1, 2, i, i + 1, gtk.SHRINK | gtk.FILL, xpadding=d.OPTION_PADDING)
         self.combo_box.connect('changed', self.combo_callback, lwp.set_func)
-        if parent_type == 'Pot':
+        if lwp.__class__.__name__ == 'Pot':
             combo_y_pos = [4, 5]
         else:
             combo_y_pos = [3, 4]
@@ -58,6 +50,17 @@ class OptionWidg(BaseWidg):
         self.alignment.add(self.frame)
         self.show_self()
         self.set_visibility(False)
+
+    def update_text(self):
+        lwp = self.lnkd_widg.get_parent()
+        entry_data = [(lwp.get_name(), lwp.set_name, ('name', self.lnkd_widg.label)),
+              (lwp.get_midi_loc(), lwp.set_midi_loc, ('cc no')),
+              (lwp.get_colour(), lwp.set_colour, ('colour', self.lnkd_widg.fill))]
+        if lwp.__class__.__name__ == 'Pot':
+            entry_data.append((lwp.get_num_steps(), lwp.set_num_steps, ('steps')))
+        for i, entry in enumerate(self.entries):
+            entry.set_text(str(entry_data[i][0]))
+            entry.connect('activate', self.entry_callback, entry_data[i][1], entry_data[i][2])
 
     @staticmethod
     def entry_callback(widget, function, args):
