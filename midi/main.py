@@ -67,11 +67,7 @@ class Engine():
                 pickle.dump(key, f)
         f.close()
 
-    def midi_out(self, midi_signal, midi_vel, key_state):
-        if key_state:
-            midi_channel = rt_const.NOTE_ON
-        else:  # key_state == False
-            midi_channel = rt_const.NOTE_OFF
+    def midi_out(self, midi_channel, midi_signal, midi_vel):
         self.midiout.send_message([midi_channel, midi_signal, midi_vel])
 
 

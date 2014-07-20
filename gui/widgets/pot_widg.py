@@ -85,11 +85,11 @@ class PotWidg(BaseWidg):
                 self.start_pos = event.y
                 self.drag_start = False
             delta_y = event.y - self.start_pos
-            new_vel = int(delta_y/2)  # /2 for easier precision for user
+            new_vel = delta_y/2  # /2 for easier precision for user
             if self.parent.set_vel(new_vel):  # don't send midi messages unless vel has changed
-                self.send_midi_msg(self.parent.get_midi_loc(),
-                                   self.parent.get_midi_vel(),
-                                   True)  # pots are always NOTE_ON messages
+                self.send_midi_msg(self.parent.get_channel(),
+                                   self.parent.get_midi_loc(),
+                                   self.parent.get_midi_vel())
             self.fill()
             self.start_pos = event.y
         return True

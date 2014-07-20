@@ -67,9 +67,9 @@ class KeyWidg(BaseWidg):
         if event.button == 1:  # left click
             if event.type == gtk.gdk.BUTTON_PRESS:
                 if self.parent.set_state('press'):  # if state has changed
-                    self.send_midi_msg(self.parent.get_midi_loc(),
-                                       self.parent.get_midi_vel(),
-                                       self.parent.get_state())
+                    self.send_midi_msg(self.parent.get_channel(),
+                                       self.parent.get_midi_loc(),
+                                       self.parent.get_midi_vel())
                     self.fill()
             elif event.type == gtk.gdk.BUTTON_RELEASE:
                 if self.parent.set_state('release'):

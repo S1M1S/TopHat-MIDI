@@ -22,6 +22,9 @@ class Key(Base):
 
         return change_state
 
+    def get_channel(self):
+        return 0x90  # NOTE ON
+
     def get_state(self):
         return self.state
 

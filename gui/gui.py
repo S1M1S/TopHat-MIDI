@@ -206,20 +206,6 @@ class Gui:
     def new_modulator(self, **kwargs):  # TODO: actually make this function. Should create a new mod_widg on the screen.
         pass
 
-    def key_control(self, key_drawing_area, event, key_widg):
-        if event.type == gtk.gdk.BUTTON_PRESS:
-            if event.button == 1:
-                if key_widg.parent.set_state('press'):
-                    engine.midi_out(key_widg.parent.midi_loc, key_widg.parent.get_midi_vel(), key_widg.parent.state)
-                key_drawing_area.queue_draw()
-            else:
-                self.selected_key_widg = key_widg  # so we know whose settings we are changing
-                self.key_menu.popup(None, None, None, event.button, event.time)  # give a context menu
-        elif event.type == gtk.gdk.BUTTON_RELEASE:
-            key_widg.parent.set_state('release')
-            key_drawing_area.queue_draw()
-        return True
-
     def entry_control(self, entry, event, key_widg):
         if event.type == gtk.gdk._2BUTTON_PRESS:
             entry.set_editable(True)
@@ -271,6 +257,7 @@ class Gui:
 
 if __name__ == "__main__":
     engine = Engine()
+    engine.new_file('default', 'C:\\Users\\Celery\\Documents\\TopHat-MIDI')
     engine.open('C:\\Users\\Celery\\Documents\\TopHat-MIDI\\default.txt')
     gui = Gui()
     gtk.main()

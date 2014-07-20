@@ -33,8 +33,8 @@ class BaseWidg():
         # this is needed because of the inheritor's __init__ function
         # everything should show at the end of THAT function, not this __init__.
 
-    def send_midi_msg(self, note, vel, state):
-        self.engine.midi_out(note, vel, state)
+    def send_midi_msg(self, channel, note, vel):
+        self.engine.midi_out(channel, note, vel)
 
     def set_label_text(self, new_text):
         self.label.set_text(new_text)

@@ -53,12 +53,14 @@ class Base:
         success = True
         if new_colour.startswith(('(','[')):  # it must be an rgb tuple or list
             try:
-                self.colour = [int(x) for x in new_colour[1:-1].split(",")]  # make each item an integer
+                new_colour = [int(x) for x in new_colour[1:-1].split(",")]  # make each item an integer
             except ValueError:
                 success = False
-            for val in self.colour:
+            for val in new_colour:
                 if val > 255:
                     success = False
+            if success:
+                self.colour = new_colour
         elif new_colour in d.rgb_cols:  # it must be a named colour
             self.colour = d.rgb_cols[new_colour]
         else:
@@ -81,7 +83,7 @@ class Base:
         return self.colour
 
     def get_gtk_colour(self):
-        gtk_colour = [int((x/255.0)*65535) for x in self.colour]  # gtk does not accept regular rgb vals
+        gtk_colour = [int((x/255.0)*65535) for x in self.colour]  # gtk does not accept regular rgb values
         return gtk_colour
 
     def get_available_funcs(self):

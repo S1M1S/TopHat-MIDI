@@ -4,7 +4,10 @@
       <w>accel</w>
       <w>attrs</w>
       <w>keyval</w>
+      <w>lnkd</w>
+      <w>midiout</w>
       <w>newobj</w>
+      <w>prnt</w>
       <w>widg</w>
       <w>widgs</w>
     </words>
